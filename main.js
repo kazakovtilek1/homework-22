@@ -79,26 +79,47 @@ let form2 = document.forms.form2
 let idInput = document.querySelector('#idInput')
 let idList = document.querySelector('#idList')
 
-async function getUserById (userId) {
-    let response = await fetch(url)
-    return response.json()
-}
 
-async function getUser2 () {
-    let userId = idInput.value
+async function getUsers (id = null) {
+
     try {
-        let userInfo = await getUserById(userId)
-        idList.innerHTML = `
-        <li>${userInfo.name}</li>
-        <li>${userInfo.username}</li>
-        <li>${userInfo.email}</li>
-        <li>${userInfo.phone}</li>
-        <li>${userInfo.website}</li>
-        `
+
+        if(id) {
+            url += `?id=${id}`
+        }
+
+        let response = await fetch(url)
+        if(response.status === 200) {
+            let users = await response.json()
+            addUsersToDOM (users)
+            return users
+        } else if(response.status === 404) {
+            throw `Error: 404 Not found this url`
+        } else if(response.status === 401) {
+            throw `Error: 401 Unauthorized`
+        }
     }
-    catch (error) {
-        console.log(error);
+    catch(error) {
+        console.error(error);
     }
+
 }
 
-form2.addEventListener('submit', getUser2)
+function addUsersToDOM (users) {
+    idList.innerHTML = '';
+    users.forEach(el => {
+        idList.innerHTML += `<li>id: ${el.id} <br> ${el.name} <br> ${el.username} <br> ${el.email} <br> ${el.phone} <br> ${el.website}</li>`
+    })
+}
+
+
+async function getById (event) {
+    event.preventDefault()
+   const {id} = form2
+
+   getUsers(id.value)
+
+}
+
+// getUsers()
+form2.addEventListener('submit', getById)
